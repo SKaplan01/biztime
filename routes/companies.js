@@ -1,5 +1,6 @@
 const express = require('express');
 const db = require('../db');
+const slugify = require('slugify');
 
 const router = new express.Router();
 
@@ -15,26 +16,32 @@ router.get('/', async function(req, res, next) {
   }
 });
 
-router.get('/:code', async function(req, res, next) {
-  // select a company, returns name,code,description
-  try {
-    const { code } = req.params;
+//updated below
+// router.get('/:code', async function(req, res, next) {
+//   // select a company, returns name,code,description
+//   try {
+//     const { code } = req.params;
 
-    const results = await db.query(
-      `SELECT code,name,description FROM companies WHERE code=$1`,
-      [code]
-    );
+//     const results = await db.query(
+//       `SELECT code,name,description FROM companies WHERE code=$1`,
+//       [code]
+//     );
 
-    return res.json(results.rows);
-  } catch (err) {
-    return next(err);
-  }
-});
+//     return res.json(results.rows);
+//   } catch (err) {
+//     return next(err);
+//   }
+// });
 
 router.post('/', async function(req, res, next) {
   // add a company, returns code,name,description
   try {
-    const { code, name, description } = req.body;
+    let { code, name, description } = req.body;
+    code = slugify(code, {
+      remove: /[*+~.()'"!:@/]/g,
+      replacement: '_',
+      lower: true
+    });
     const result = await db.query(
       `INSERT INTO companies(code, name, description)
       VALUES ($1, $2, $3)
@@ -83,6 +90,31 @@ router.delete('/:code', async function(req, res, next) {
     }
 
     return res.json({ message: 'Deleted' });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+//returns the company and a list of all their invoices
+router.get('/:code', async function(req, res, next) {
+  try {
+    const { code } = req.params;
+    let compPromise = db.query(
+      `SELECT code, name, description FROM companies WHERE code=$1`,
+      [code]
+    );
+
+    let invoicePromise = db.query(
+      `SELECT id, comp_code, amt, paid, add_date, paid_date
+      FROM invoices WHERE comp_code=$1`,
+      [code]
+    );
+
+    Promise.all([compPromise, invoicePromise]).then(function(results) {
+      let companyResult = results[0].rows[0];
+      companyResult.invoices = results[1].rows;
+      return res.json({ company: companyResult });
+    });
   } catch (err) {
     return next(err);
   }
