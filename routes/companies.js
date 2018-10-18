@@ -16,23 +16,6 @@ router.get('/', async function(req, res, next) {
   }
 });
 
-//updated below
-// router.get('/:code', async function(req, res, next) {
-//   // select a company, returns name,code,description
-//   try {
-//     const { code } = req.params;
-
-//     const results = await db.query(
-//       `SELECT code,name,description FROM companies WHERE code=$1`,
-//       [code]
-//     );
-
-//     return res.json(results.rows);
-//   } catch (err) {
-//     return next(err);
-//   }
-// });
-
 router.post('/', async function(req, res, next) {
   // add a company, returns code,name,description
   try {
