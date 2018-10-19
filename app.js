@@ -3,12 +3,13 @@
 const express = require('express');
 const app = express();
 app.use(express.json());
-
-const cRoutes = require('./routes/companies');
-app.use('/companies', cRoutes);
-
 const iRoutes = require('./routes/invoices');
+const cRoutes = require('./routes/companies');
+const indRoutes = require('./routes/industries');
+
+app.use('/companies', cRoutes);
 app.use('/invoices', iRoutes);
+app.use('/industries', indRoutes);
 
 /** 404 handler */
 
